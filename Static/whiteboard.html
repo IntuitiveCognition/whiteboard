@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Educational Whiteboard Pro</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .header h1 {
+      color: #2c3e50;
+      font-size: 24px;
+      font-weight: 600;
+      margin-right: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 300px;
+    }
+
+    #instruction {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e0e6ed;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    #instruction:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-secondary {
+      background: #f8f9fa;
+      color: #495057;
+      border: 2px solid #e9ecef;
+    }
+
+    .btn-secondary:hover {
+      background: #e9ecef;
+    }
+
+    .tools {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+    }
+
+    .canvas-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      flex: 1;
+      position: relative;
+    }
+
+    .sidebar {
+      width: 300px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .status {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .status.loading {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .templates {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .template-btn {
+      padding: 10px 12px;
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    .template-btn:hover {
+      background: #e9ecef;
+      transform: translateX(5px);
+    }
+
+    #canvas-wrapper {
+      position: relative;
+      display: inline-block;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .zoom-controls {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+      padding: 5px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .zoom-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .zoom-btn:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .loading-spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .shortcuts {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .shortcuts h4 {
+      margin-bottom: 10px;
+      color: #495057;
+    }
+
+    .shortcuts ul {
+      list-style: none;
+    }
+
+    .shortcuts li {
+      margin-bottom: 5px;
+      color: #6c757d;
+    }
+
+    /* Math Solver Styles */
+    .math-solver {
+      display: none;
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      border: 2px solid #e9ecef;
+    }
+
+    .math-solver.active {
+      display: block;
+    }
+
+    .math-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e6ed;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: 'Courier New', monospace;
+      margin-bottom: 15px;
+    }
+
+    .math-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .math-steps {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 15px;
+    }
+
+    .math-step {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-left: 4px solid #667eea;
+    }
+
+    .math-step.current {
+      border-left-color: #28a745;
+      background: #f8fff8;
+    }
+
+    .math-latex {
+      font-size: 18px;
+      margin-bottom: 8px;
+      text-align: center;
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    .math-explanation {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 5px;
+    }
+
+    .teaching-comment {
+      font-style: italic;
+      color: #6c757d;
+      background: rgba(102, 126, 234, 0.1);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .step-navigation {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .step-nav-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #667eea;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .step-nav-btn:hover {
+      background: #5a67d8;
+    }
+
+    .step-nav-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .math-toggle {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 60px;
+      height: 30px;
+      background: #ccc;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .toggle-switch.active {
+      background: #667eea;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+    }
+
+    .toggle-switch.active .toggle-slider {
+      transform: translateX(30px);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1><i class="fas fa-chalkboard-teacher"></i> AI Educational Whiteboard Pro</h1>
+    <div class="input-group">
+      <input type="text" id="instruction" placeholder="Describe what you want to draw (e.g., 'Draw a neuron with dendrites and axon labeled', 'Show the Krebs cycle', 'Graph y = sin(x)')">
+      <button class="btn btn-primary" onclick="sendToLLM()">
+        <i class="fas fa-magic"></i>
+        <span>Generate</span>
+        <div class="loading-spinner"></div>
+      </button>
+    </div>
+    <div class="tools">
+      <button class="btn btn-secondary" onclick="toggleMathSolver()">
+        <i class="fas fa-calculator"></i> Solve Math
+      </button>
+      <button class="btn btn-secondary" onclick="clearCanvas()">
+        <i class="fas fa-trash"></i> Clear
+      </button>
+      <button class="btn btn-secondary" onclick="exportCanvas()">
+        <i class="fas fa-download"></i> Export
+      </button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="canvas-container">
+      <div id="canvas-wrapper">
+        <canvas id="c" width="800" height="600"></canvas>
+        <div class="zoom-controls">
+          <button class="zoom-btn" onclick="zoomIn()"><i class="fas fa-plus"></i></button>
+          <button class="zoom-btn" onclick="zoomOut()"><i class="fas fa-minus"></i></button>
+          <button class="zoom-btn" onclick="resetZoom()"><i class="fas fa-expand-arrows-alt"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div id="status" class="status">Ready to draw! Enter an instruction and click Generate.</div>
+      
+      <div>
+        <h3>Quick Templates</h3>
+        <div class="templates">
+          <div class="template-btn" onclick="setInstruction('Draw a detailed mitochondria with cristae and matrix labeled')">
+            <i class="fas fa-dna"></i> Mitochondria Structure
+          </div>
+          <div class="template-btn" onclick="setInstruction('Draw a neuron with dendrites, axon, and synapses labeled')">
+            <i class="fas fa-brain"></i> Neuron Anatomy
+          </div>
+          <div class="template-btn" onclick="setInstruction('Show the water cycle with evaporation, condensation, and precipitation')">
+            <i class="fas fa-cloud-rain"></i> Water Cycle
+          </div>
+          <div class="template-btn" onclick="setInstruction('Draw a plant cell showing nucleus, chloroplasts, and cell wall')">
+            <i class="fas fa-leaf"></i> Plant Cell
+          </div>
+          <div class="template-btn" onclick="setInstruction('Graph the function y = sin(x) and y = cos(x) on the same axes')">
+            <i class="fas fa-chart-line"></i> Trigonometric Functions
+          </div>
+          <div class="template-btn" onclick="setInstruction('Show the periodic table layout with groups and periods')">
+            <i class="fas fa-atom"></i> Periodic Table
+          </div>
+          <div class="template-btn" onclick="setInstruction('Draw the solar system with planets in order')">
+            <i class="fas fa-globe"></i> Solar System
+          </div>
+          <div class="template-btn" onclick="setInstruction('Show photosynthesis equation with reactants and products')">
+            <i class="fas fa-seedling"></i> Photosynthesis
+          </div>
+        </div>
+      </div>
+
+      <!-- Math Solver Section -->
+      <div class="math-solver" id="mathSolver">
+        <h3><i class="fas fa-calculator"></i> Step-by-Step Math Solver</h3>
+        <input type="text" class="math-input" id="mathInput" placeholder="Enter equation (e.g., 2x + 5 = 11)" />
+        <button class="btn btn-primary" onclick="solveMathSteps()" style="width: 100%; margin-bottom: 15px;">
+          <i class="fas fa-play"></i> Solve Steps
+        </button>
+        
+        <div class="math-toggle">
+          <span>Show teaching comments:</span>
+          <div class="toggle-switch active" id="teachingToggle" onclick="toggleTeachingComments()">
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+        
+        <div class="math-steps" id="mathSteps"></div>
+        
+        <div class="step-navigation" id="stepNavigation" style="display: none;">
+          <button class="step-nav-btn" id="prevBtn" onclick="previousStep()">
+            <i class="fas fa-chevron-left"></i> Previous
+          </button>
+          <span id="stepCounter">Step 1 of 1</span>
+          <button class="step-nav-btn" id="nextBtn" onclick="nextStep()">
+            Next <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="shortcuts">
+        <h4>Keyboard Shortcuts</h4>
+        <ul>
+          <li><strong>Ctrl+Enter:</strong> Generate</li>
+          <li><strong>Ctrl+Z:</strong> Undo</li>
+          <li><strong>Ctrl+Y:</strong> Redo</li>
+          <li><strong>Del:</strong> Delete selected</li>
+          <li><strong>Mouse Wheel:</strong> Zoom</li>
+          <li><strong>Space+Drag:</strong> Pan</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize MathJax
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+
+    // Initialize Fabric.js canvas with enhanced settings
+    var canvas = new fabric.Canvas('c', {
+      backgroundColor: '#ffffff',
+      selection: true,
+      preserveObjectStacking: true,
+      renderOnAddRemove: true,
+      allowTouchScrolling: true
+    });
+
+    // REVOLUTIONARY POSITIONING ENGINE
+    const DrawingUtils = {
+      // Professional color palettes
+      colors: {
+        biology: ['#4CAF50', '#8BC34A', '#CDDC39', '#FF9800', '#FF5722'],
+        chemistry: ['#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50'],
+        physics: ['#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#00BCD4'],
+        math: ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5'],
+        neutral: ['#37474F', '#546E7A', '#607D8B', '#78909C', '#90A4AE']
+      },
+
+      // SMART POSITIONING SYSTEM
+      calculateOptimalLabelPosition: function(startX, startY, endX, endY, labelText, options = {}) {
+        const dx = endX - startX;
+        const dy = endY - startY;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        
+        // Calculate perpendicular offset for optimal readability
+        const perpAngle = angle + Math.PI / 2;
+        const offset = options.labelDistance || 25;
+        
+        // Smart positioning based on arrow direction
+        let labelX, labelY;
+        if (Math.abs(angle) < Math.PI / 4 || Math.abs(angle) > 3 * Math.PI / 4) {
+          // Horizontal-ish arrow: place label above or below
+          labelX = (startX + endX) / 2;
+          labelY = (startY + endY) / 2 + (dy > 0 ? -offset : offset);
+        } else {
+          // Vertical-ish arrow: place label to the side
+          labelX = (startX + endX) / 2 + (dx > 0 ? offset : -offset);
+          labelY = (startY + endY) / 2;
+        }
+        
+        return { x: labelX, y: labelY, angle: angle };
+      },
+
+      // ADVANCED COLLISION DETECTION
+      avoidCollisions: function(x, y, existingObjects, minDistance = 30) {
+        const attempts = 16; // Try 16 positions around the original
+        const angleStep = (Math.PI * 2) / attempts;
+        
+        for (let i = 0; i < attempts; i++) {
+          const testAngle = i * angleStep;
+          const testX = x + Math.cos(testAngle) * minDistance;
+          const testY = y + Math.sin(testAngle) * minDistance;
+          
+          let collision = false;
+          for (let obj of existingObjects) {
+            const distance = Math.sqrt((testX - obj.x) ** 2 + (testY - obj.y) ** 2);
+            if (distance < minDistance) {
+              collision = true;
+              break;
+            }
+          }
+          
+          if (!collision) {
+            return { x: testX, y: testY };
+          }
+        }
+        
+        return { x, y }; // Return original if no good position found
+      },
+
+      // Create gradient fills
+      createGradient: function(type, colors, coords) {
+        if (type === 'linear') {
+          return new fabric.Gradient({
+            type: 'linear',
+            coords: coords || { x1: 0, y1: 0, x2: 100, y2: 0 },
+            colorStops: colors.map((color, i) => ({
+              offset: i / (colors.length - 1),
+              color: color
+            }))
+          });
+        } else if (type === 'radial') {
+          return new fabric.Gradient({
+            type: 'radial',
+            coords: coords || { x1: 50, y1: 50, x2: 50, y2: 50, r1: 0, r2: 50 },
+            colorStops: colors.map((color, i) => ({
+              offset: i / (colors.length - 1),
+              color: color
+            }))
+          });
+        }
+      },
+
+      // Create professional shadows
+      createShadow: function(options = {}) {
+        return new fabric.Shadow({
+          color: options.color || 'rgba(0,0,0,0.2)',
+          blur: options.blur || 10,
+          offsetX: options.offsetX || 2,
+          offsetY: options.offsetY || 2
+        });
+      },
+
+      // REVOLUTIONARY LABELED ARROW SYSTEM
+      createLabeledArrow: function(startX, startY, endX, endY, label, options = {}) {
+        const group = [];
+        
+        // Calculate optimal positioning
+        const positioning = this.calculateOptimalLabelPosition(startX, startY, endX, endY, label, options);
+        
+        // Enhanced arrow line with better styling
+        const line = new fabric.Line([startX, startY, endX, endY], {
+          stroke: options.stroke || '#333',
+          strokeWidth: options.strokeWidth || 2,
+          strokeDashArray: options.dashed ? [5, 5] : null,
+          strokeLineCap: 'round',
+          shadow: options.lineShadow ? this.createShadow({blur: 3, offsetX: 1, offsetY: 1}) : null
+        });
+        group.push(line);
+
+        // Professional arrowhead with precise positioning
+        const angle = positioning.angle;
+        const headLength = options.headLength || 15;
+        const headAngle = options.headAngle || Math.PI / 6;
+        
+        const arrowHead = new fabric.Polygon([
+          { x: endX, y: endY },
+          { 
+            x: endX - headLength * Math.cos(angle - headAngle), 
+            y: endY - headLength * Math.sin(angle - headAngle) 
+          },
+          { 
+            x: endX - headLength * Math.cos(angle + headAngle), 
+            y: endY - headLength * Math.sin(angle + headAngle) 
+          }
+        ], {
+          fill: options.stroke || '#333',
+          stroke: 'transparent',
+          shadow: options.arrowShadow ? this.createShadow({blur: 2, offsetX: 1, offsetY: 1}) : null
+        });
+        group.push(arrowHead);
+
+        // SMART LABEL POSITIONING with leader line if needed
+        if (label) {
+          const labelDistance = Math.sqrt((positioning.x - endX) ** 2 + (positioning.y - endY) ** 2);
+          
+          // Add leader line if label is far from arrow
+          if (labelDistance > 40) {
+            const leaderLine = new fabric.Line([endX, endY, positioning.x, positioning.y], {
+              stroke: options.leaderStroke || '#666',
+              strokeWidth: 1,
+              strokeDashArray: [3, 3],
+              opacity: 0.7
+            });
+            group.push(leaderLine);
+          }
+          
+          // Enhanced label with professional styling
+          const text = new fabric.Text(label, {
+            left: positioning.x,
+            top: positioning.y,
+            fontSize: options.fontSize || 14,
+            fill: options.textColor || '#333',
+            fontFamily: options.fontFamily || 'Arial, sans-serif',
+            fontWeight: options.fontWeight || 'bold',
+            backgroundColor: options.labelBackground || 'rgba(255,255,255,0.95)',
+            padding: options.padding || 6,
+            borderColor: options.borderColor || '#ddd',
+            stroke: options.textBorder ? '#ddd' : null,
+            strokeWidth: options.textBorder ? 1 : 0,
+            shadow: options.textShadow ? this.createShadow({blur: 2, offsetX: 1, offsetY: 1}) : null,
+            textAlign: 'center',
+            originX: 'center',
+            originY: 'center'
+          });
+          group.push(text);
+        }
+
+        return new fabric.Group(group);
+      },
+
+      // INTELLIGENT LAYOUT SYSTEM for complex structures
+      createSmartLayout: function(centerX, centerY, elements, options = {}) {
+        const radius = options.radius || 80;
+        const startAngle = options.startAngle || 0;
+        const angleStep = (Math.PI * 2) / elements.length;
+        
+        return elements.map((element, index) => {
+          const angle = startAngle + (index * angleStep);
+          const x = centerX + Math.cos(angle) * radius;
+          const y = centerY + Math.sin(angle) * radius;
+          
+          return {
+            ...element,
+            left: x - (element.width || 20) / 2,
+            top: y - (element.height || 20) / 2,
+            layoutAngle: angle
+          };
+        });
+      },
+
+      // PRECISION GRID SYSTEM
+      snapToGrid: function(x, y, gridSize = 10) {
+        return {
+          x: Math.round(x / gridSize) * gridSize,
+          y: Math.round(y / gridSize) * gridSize
+        };
+      }
+    };
+
+    // Enhanced shape drawing functions
+    function drawShape(shape) {
+      try {
+        switch (shape.type) {
+          case "circle":
+            drawCircle(shape);
+            break;
+          case "rect":
+            drawRect(shape);
+            break;
+          case "ellipse":
+            drawEllipse(shape);
+            break;
+          case "line":
+            drawLine(shape);
+            break;
+          case "arrow":
+            drawArrow(shape);
+            break;
+          case "labeledArrow":
+            drawLabeledArrow(shape);
+            break;
+          case "text":
+            drawText(shape);
+            break;
+          case "mathText":
+            drawMathText(shape);
+            break;
+          case "path":
+            drawPath(shape);
+            break;
+          case "group":
+            drawGroup(shape);
+            break;
+          case "cell":
+            drawCell(shape);
+            break;
+          case "neuron":
+            drawNeuron(shape);
+            break;
+          case "molecule":
+            drawMolecule(shape);
+            break;
+          case "graph":
+            drawGraph(shape);
+            break;
+          case "chart":
+            drawChart(shape);
+            break;
+          case "organelle":
+            drawOrganelle(shape);
+            break;
+          default:
+            console.warn("Unknown shape:", shape);
+        }
+      } catch (err) {
+        console.error("Failed to draw shape:", shape, err);
+      }
+    }
+
+    // Enhanced basic shapes with professional styling
+    function drawCircle(shape) {
+      const circle = new fabric.Circle({
+        left: shape.left || 0,
+        top: shape.top || 0,
+        radius: shape.radius || 20,
+        fill: shape.gradient ? 
+          DrawingUtils.createGradient('radial', shape.gradient) : 
+          (shape.fill || '#4CAF50'),
+        stroke: shape.stroke || '#388E3C',
+        strokeWidth: shape.strokeWidth || 2,
+        shadow: shape.shadow ? DrawingUtils.createShadow(shape.shadow) : null
+      });
+      canvas.add(circle);
+      return circle;
+    }
+
+    function drawRect(shape) {
+      const rect = new fabric.Rect({
+        left: shape.left || 0,
+        top: shape.top || 0,
+        width: shape.width || 60,
+        height: shape.height || 40,
+        fill: shape.gradient ? 
+          DrawingUtils.createGradient('linear', shape.gradient) : 
+          (shape.fill || '#2196F3'),
+        stroke: shape.stroke || '#1976D2',
+        strokeWidth: shape.strokeWidth || 2,
+        rx: shape.borderRadius || 4,
+        ry: shape.borderRadius || 4,
+        shadow: shape.shadow ? DrawingUtils.createShadow(shape.shadow) : null
+      });
+      canvas.add(rect);
+      return rect;
+    }
+
+    function drawEllipse(shape) {
+      const ellipse = new fabric.Ellipse({
+        left: shape.left || 0,
+        top: shape.top || 0,
+        rx: shape.rx || 30,
+        ry: shape.ry || 20,
+        fill: shape.gradient ? 
+          DrawingUtils.createGradient('radial', shape.gradient) : 
+          (shape.fill || '#FF9800'),
+        stroke: shape.stroke || '#F57C00',
+        strokeWidth: shape.strokeWidth || 2,
+        shadow: shape.shadow ? DrawingUtils.createShadow(shape.shadow) : null
+      });
+      canvas.add(ellipse);
+      return ellipse;
+    }
+
+    function drawLine(shape) {
+      const line = new fabric.Line([
+        shape.x1 || 0, shape.y1 || 0, 
+        shape.x2 || 100, shape.y2 || 0
+      ], {
+        stroke: shape.stroke || '#333',
+        strokeWidth: shape.strokeWidth || 2,
+        strokeDashArray: shape.dashed ? [5, 5] : null,
+        strokeLineCap: 'round'
+      });
+      canvas.add(line);
+      return line;
+    }
+
+    function drawLabeledArrow(shape) {
+      const arrow = DrawingUtils.createLabeledArrow(
+        shape.x1 || 0, shape.y1 || 0,
+        shape.x2 || 100, shape.y2 || 0,
+        shape.label,
+        shape
+      );
+      canvas.add(arrow);
+      return arrow;
+    }
+
+    function drawArrow(shape) {
+      // Enhanced arrow with better styling
+      const startX = shape.x1 || 0;
+      const startY = shape.y1 || 0;
+      const endX = shape.x2 || 100;
+      const endY = shape.y2 || 0;
+      
+      const line = new fabric.Line([startX, startY, endX, endY], {
+        stroke: shape.stroke || '#333',
+        strokeWidth: shape.strokeWidth || 3,
+        strokeLineCap: 'round'
+      });
+
+      const dx = endX - startX;
+      const dy = endY - startY;
+      const angle = Math.atan2(dy, dx);
+      const headLength = shape.headLength || 15;
+      const headAngle = Math.PI / 6;
+
+      const arrowHead = new fabric.Polygon([
+        { x: endX, y: endY },
+        { 
+          x: endX - headLength * Math.cos(angle - headAngle), 
+          y: endY - headLength * Math.sin(angle - headAngle) 
+        },
+        { 
+          x: endX - headLength * Math.cos(angle + headAngle), 
+          y: endY - headLength * Math.sin(angle + headAngle) 
+        }
+      ], {
+        fill: shape.stroke || '#333',
+        stroke: 'transparent'
+      });
+
+      const group = new fabric.Group([line, arrowHead]);
+      canvas.add(group);
+      return group;
+    }
+
+    function drawText(shape) {
+      const text = new fabric.Text(shape.text || '', {
+        left: shape.left || 0,
+        top: shape.top || 0,
+        fontSize: shape.fontSize || 16,
+        fontFamily: shape.fontFamily || 'Arial, sans-serif',
+        fill: shape.fill || '#333',
+        fontWeight: shape.fontWeight || 'normal',
+        fontStyle: shape.fontStyle || 'normal',
+        textAlign: shape.textAlign || 'left',
+        backgroundColor: shape.backgroundColor,
+        padding: shape.padding || 0,
+        shadow: shape.shadow ? DrawingUtils.createShadow(shape.shadow) : null
+      });
+      canvas.add(text);
+      return text;
+    }
+
+    function drawMathText(shape) {
+      // For mathematical equations - we'll render as styled text for now
+      // In a full implementation, you'd integrate with MathJax for proper LaTeX rendering
+      const text = new fabric.Text(shape.text || '', {
+        left: shape.left || 0,
+        top: shape.top || 0,
+        fontSize: shape.fontSize || 18,
+        fontFamily: 'Times New Roman, serif',
+        fill: shape.fill || '#333',
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        padding: 8,
+        borderColor: '#ddd',
+        stroke: shape.border ? '#ddd' : null,
+        strokeWidth: shape.border ? 1 : 0
+      });
+      canvas.add(text);
+      return text;
+    }
+
+    function drawPath(shape) {
+      const path = new fabric.Path(shape.path, {
+        stroke: shape.stroke || '#333',
+        strokeWidth: shape.strokeWidth || 2,
+        fill: shape.fill || '',
+        left: shape.left || 0,
+        top: shape.top || 0,
+        shadow: shape.shadow ? DrawingUtils.createShadow(shape.shadow) : null
+      });
+      canvas.add(path);
+      return path;
+    }
+
+    function drawGroup(shape) {
+      if (Array.isArray(shape.objects)) {
+        const objects = [];
+        shape.objects.forEach(obj => {
+          const drawnObj = drawShape(obj);
+          if (drawnObj) objects.push(drawnObj);
+        });
+        if (objects.length > 0) {
+          const group = new fabric.Group(objects, {
+            left: shape.left || 0,
+            top: shape.top || 0
+          });
+          canvas.add(group);
+          return group;
+        }
+      }
+    }
+
+    // ULTRA-PRECISE CELLULAR ARCHITECTURE
+    function drawCell(shape) {
+      const cellType = shape.cellType || 'animal';
+      const objects = [];
+      const cellWidth = shape.width || 160;
+      const cellHeight = shape.height || 120;
+      const centerX = cellWidth / 2;
+      const centerY = cellHeight / 2;
+
+      // Cell membrane with precise proportions
+      const membrane = new fabric.Ellipse({
+        left: centerX,
+        top: centerY,
+        rx: cellWidth / 2,
+        ry: cellHeight / 2,
+        fill: DrawingUtils.createGradient('radial', ['rgba(173, 216, 230, 0.2)', 'rgba(173, 216, 230, 0.4)']),
+        stroke: '#4682B4',
+        strokeWidth: 3,
+        originX: 'center',
+        originY: 'center',
+        shadow: DrawingUtils.createShadow({blur: 8, offsetX: 2, offsetY: 2})
+      });
+      objects.push(membrane);
+
+      // Nucleus - perfectly centered with realistic proportions
+      const nucleusRadius = Math.min(cellWidth, cellHeight) * 0.15;
+      const nucleus = new fabric.Circle({
+        left: centerX,
+        top: centerY,
+        radius: nucleusRadius,
+        fill: DrawingUtils.createGradient('radial', ['#E6E6FA', '#9370DB']),
+        stroke: '#8A2BE2',
+        strokeWidth: 2,
+        originX: 'center',
+        originY: 'center',
+        shadow: DrawingUtils.createShadow({blur: 4, offsetX: 1, offsetY: 1})
+      });
+      objects.push(nucleus);
+
+      // Nucleolus - small dark spot in nucleus
+      const nucleolus = new fabric.Circle({
+        left: centerX + nucleusRadius * 0.2,
+        top: centerY - nucleusRadius * 0.2,
+        radius: nucleusRadius * 0.3,
+        fill: '#4B0082',
+        originX: 'center',
+        originY: 'center'
+      });
+      objects.push(nucleolus);
+
+      if (cellType === 'plant') {
+        // Cell wall - precise rectangular boundary
+        const cellWall = new fabric.Rect({
+          left: centerX,
+          top: centerY,
+          width: cellWidth + 12,
+          height: cellHeight + 12,
+          fill: 'transparent',
+          stroke: '#228B22',
+          strokeWidth: 4,
+          originX: 'center',
+          originY: 'center',
+          rx: 8,
+          ry: 8
+        });
+        objects.push(cellWall);
+
+        // Chloroplasts - smart positioning to avoid nucleus
+        const chloroplastPositions = [
+          {x: centerX - cellWidth * 0.25, y: centerY - cellHeight * 0.2},
+          {x: centerX + cellWidth * 0.25, y: centerY - cellHeight * 0.2},
+          {x: centerX - cellWidth * 0.3, y: centerY + cellHeight * 0.15},
+          {x: centerX + cellWidth * 0.3, y: centerY + cellHeight * 0.15},
+          {x: centerX, y: centerY + cellHeight * 0.3}
+        ];
+
+        chloroplastPositions.forEach(pos => {
+          const chloroplast = new fabric.Ellipse({
+            left: pos.x,
+            top: pos.y,
+            rx: 8,
+            ry: 6,
+            fill: DrawingUtils.createGradient('radial', ['#90EE90', '#32CD32']),
+            stroke: '#228B22',
+            strokeWidth: 1,
+            originX: 'center',
+            originY: 'center'
+          });
+          objects.push(chloroplast);
+        });
+
+        // Large vacuole - taking up significant space
+        const vacuole = new fabric.Ellipse({
+          left: centerX + cellWidth * 0.1,
+          top: centerY - cellHeight * 0.1,
+          rx: cellWidth * 0.2,
+          ry: cellHeight * 0.25,
+          fill: 'rgba(224, 255, 255, 0.6)',
+          stroke: '#40E0D0',
+          strokeWidth: 2,
+          originX: 'center',
+          originY: 'center'
+        });
+        objects.push(vacuole);
+      }
+
+      // Mitochondria - strategically placed for realistic distribution
+      const mitoPositions = [
+        {x: centerX - cellWidth * 0.2, y: centerY + cellHeight * 0.25, angle: 30},
+        {x: centerX + cellWidth * 0.25, y: centerY - cellHeight * 0.15, angle: -45},
+        {x: centerX - cellWidth * 0.15, y: centerY - cellHeight * 0.25, angle: 0}
+      ];
+
+      mitoPositions.forEach(pos => {
+        const mito = new fabric.Ellipse({
+          left: pos.x,
+          top: pos.y,
+          rx: 12,
+          ry: 6,
+          fill: DrawingUtils.createGradient('radial', ['#FFB6C1', '#FF69B4']),
+          stroke: '#DC143C',
+          strokeWidth: 1.5,
+          originX: 'center',
+          originY: 'center',
+          angle: pos.angle
+        });
+        objects.push(mito);
+      });
+
+      // Endoplasmic Reticulum - curved membrane network
+      const erPath1 = new fabric.Path('M 20 40 Q 60 20 100 40 Q 140 60 180 40', {
+        stroke: '#8FBC8F',
+        strokeWidth: 2,
+        fill: '',
+        opacity: 0.8
+      });
+      objects.push(erPath1);
+
+      const erPath2 = new fabric.Path('M 30 80 Q 70 60 110 80 Q 150 100 190 80', {
+        stroke: '#8FBC8F',
+        strokeWidth: 2,
+        fill: '',
+        opacity: 0.8
+      });
+      objects.push(erPath2);
+
+      const group = new fabric.Group(objects, {
+        left: shape.left || 100,
+        top: shape.top || 100
+      });
+      canvas.add(group);
+      return group;
+    }
+
+    // ANATOMICALLY PERFECT NEURON ARCHITECTURE
+    function drawNeuron(shape) {
+      const objects = [];
+      const somaRadius = shape.somaRadius || 25;
+      const axonLength = shape.axonLength || 200;
+
+      // Cell body (soma) - perfectly centered
+      const soma = new fabric.Circle({
+        left: 0,
+        top: 0,
+        radius: somaRadius,
+        fill: DrawingUtils.createGradient('radial', ['#FFE4B5', '#DEB887', '#CD853F']),
+        stroke: '#8B7355',
+        strokeWidth: 2,
+        shadow: DrawingUtils.createShadow({blur: 6, offsetX: 2, offsetY: 2}),
+        originX: 'center',
+        originY: 'center'
+      });
+      objects.push(soma);
+
+      // Nucleus - precisely centered in soma
+      const nucleusRadius = somaRadius * 0.4;
+      const nucleus = new fabric.Circle({
+        left: 0,
+        top: 0,
+        radius: nucleusRadius,
+        fill: DrawingUtils.createGradient('radial', ['#9370DB', '#4B0082']),
+        stroke: '#191970',
+        strokeWidth: 1.5,
+        originX: 'center',
+        originY: 'center'
+      });
+      objects.push(nucleus);
+
+      // Nucleolus - small dot in nucleus
+      const nucleolus = new fabric.Circle({
+        left: nucleusRadius * 0.2,
+        top: -nucleusRadius * 0.2,
+        radius: nucleusRadius * 0.3,
+        fill: '#000080',
+        originX: 'center',
+        originY: 'center'
+      });
+      objects.push(nucleolus);
+
+      // Dendrites - realistic branching pattern
+      const dendriteAngles = [-Math.PI * 0.7, -Math.PI * 0.5, -Math.PI * 0.3, Math.PI * 0.3, Math.PI * 0.5, Math.PI * 0.7];
+      
+      dendriteAngles.forEach((angle, index) => {
+        const length = 35 + Math.random() * 25;
+        const startX = Math.cos(angle) * somaRadius;
+        const startY = Math.sin(angle) * somaRadius;
+        const endX = Math.cos(angle) * length;
+        const endY = Math.sin(angle) * length;
+        
+        // Main dendrite branch
+        const dendrite = new fabric.Path(
+          `M ${startX} ${startY} Q ${(startX + endX) / 2} ${(startY + endY) / 2} ${endX} ${endY}`,
+          {
+            stroke: '#8B4513',
+            strokeWidth: 3 - (index * 0.2),
+            fill: '',
+            strokeLineCap: 'round'
+          }
+        );
+        objects.push(dendrite);
+
+        // Smaller branches
+        for (let i = 0; i < 2; i++) {
+          const branchAngle = angle + (Math.random() - 0.5) * 0.8;
+          const branchLength = length * 0.6;
+          const branchStartX = endX * 0.7;
+          const branchStartY = endY * 0.7;
+          const branchEndX = branchStartX + Math.cos(branchAngle) * branchLength;
+          const branchEndY = branchStartY + Math.sin(branchAngle) * branchLength;
+          
+          const branch = new fabric.Line([branchStartX, branchStartY, branchEndX, branchEndY], {
+            stroke: '#8B4513',
+            strokeWidth: 1.5,
+            strokeLineCap: 'round'
+          });
+          objects.push(branch);
+        }
+      });
+
+      // Axon hillock - transition from soma to axon
+      const hillockWidth = 8;
+      const hillockHeight = 15;
+      const hillock = new fabric.Polygon([
+        {x: somaRadius, y: -hillockHeight/2},
+        {x: somaRadius + hillockWidth, y: -hillockHeight/3},
+        {x: somaRadius + hillockWidth, y: hillockHeight/3},
+        {x: somaRadius, y: hillockHeight/2}
+      ], {
+        fill: '#DAA520',
+        stroke: '#B8860B',
+        strokeWidth: 1
+      });
+      objects.push(hillock);
+
+      // Axon - main transmission line
+      const axon = new fabric.Line([somaRadius + hillockWidth, 0, axonLength, 0], {
+        stroke: '#8B4513',
+        strokeWidth: 4,
+        strokeLineCap: 'round',
+        shadow: DrawingUtils.createShadow({blur: 3, offsetX: 1, offsetY: 1})
+      });
+      objects.push(axon);
+
+      // Myelin sheaths - precise spacing and sizing
+      const myelinSegments = 4;
+      const segmentLength = (axonLength - somaRadius - hillockWidth - 40) / myelinSegments;
+      const nodeLength = 8; // Nodes of Ranvier
+      
+      for (let i = 0; i < myelinSegments; i++) {
+        const segmentStart = somaRadius + hillockWidth + 20 + (i * (segmentLength + nodeLength));
+        
+        // Myelin sheath
+        const sheath = new fabric.Rect({
+          left: segmentStart,
+          top: -8,
+          width: segmentLength,
+          height: 16,
+          fill: DrawingUtils.createGradient('linear', ['#F0F8FF', '#E6F3FF']),
+          stroke: '#4682B4',
+          strokeWidth: 1.5,
+          rx: 4,
+          ry: 4,
+          originY: 'center'
+        });
+        objects.push(sheath);
+
+        // Node of Ranvier (gap between segments)
+        if (i < myelinSegments - 1) {
+          const node = new fabric.Rect({
+            left: segmentStart + segmentLength,
+            top: -2,
+            width: nodeLength,
+            height: 4,
+            fill: '#FF6347',
+            stroke: '#DC143C',
+            strokeWidth: 1,
+            originY: 'center'
+          });
+          objects.push(node);
+        }
+      }
+
+      // Axon terminals - synaptic boutons
+      const terminalPositions = [
+        {x: axonLength - 10, y: -8},
+        {x: axonLength - 5, y: 0},
+        {x: axonLength - 10, y: 8},
+        {x: axonLength - 15, y: -4},
+        {x: axonLength - 15, y: 4}
+      ];
+
+      terminalPositions.forEach(pos => {
+        const terminal = new fabric.Circle({
+          left: pos.x,
+          top: pos.y,
+          radius: 5,
+          fill: DrawingUtils.createGradient('radial', ['#FF7F50', '#FF6347']),
+          stroke: '#DC143C',
+          strokeWidth: 1.5,
+          originX: 'center',
+          originY: 'center',
+          shadow: DrawingUtils.createShadow({blur: 2, offsetX: 1, offsetY: 1})
+        });
+        objects.push(terminal);
+
+        // Neurotransmitter vesicles
+        for (let i = 0; i < 3; i++) {
+          const vesicle = new fabric.Circle({
+            left: pos.x + (Math.random() - 0.5) * 6,
+            top: pos.y + (Math.random() - 0.5) * 6,
+            radius: 1,
+            fill: '#FFD700',
+            originX: 'center',
+            originY: 'center'
+          });
+          objects.push(vesicle);
+        }
+      });
+
+      const group = new fabric.Group(objects, {
+        left: shape.left || 100,
+        top: shape.top || 200
+      });
+      canvas.add(group);
+      return group;
+    }
+
+    function drawMolecule(shape) {
+      const moleculeType = shape.moleculeType || 'water';
+      const objects = [];
+
+      if (moleculeType === 'water') {
+        // Oxygen
+        const oxygen = new fabric.Circle({
+          left: 0,
+          top: 0,
+          radius: 12,
+          fill: '#FF0000',
+          stroke: '#8B0000',
+          strokeWidth: 2
+        });
+        objects.push(oxygen);
+
+        // Hydrogen atoms
+        const h1 = new fabric.Circle({
+          left: 20,
+          top: -10,
+          radius: 6,
+          fill: '#FFFFFF',
+          stroke: '#A9A9A9',
+          strokeWidth: 1
+        });
+        objects.push(h1);
+
+        const h2 = new fabric.Circle({
+          left: 20,
+          top: 10,
+          radius: 6,
+          fill: '#FFFFFF',
+          stroke: '#A9A9A9',
+          strokeWidth: 1
+        });
+        objects.push(h2);
+
+        // Bonds
+        const bond1 = new fabric.Line([12, -6, 20, -10], {
+          stroke: '#333',
+          strokeWidth: 2
+        });
+        objects.push(bond1);
+
+        const bond2 = new fabric.Line([12, 6, 20, 10], {
+          stroke: '#333',
+          strokeWidth: 2
+        });
+        objects.push(bond2);
+
+        // Labels
+        const oLabel = new fabric.Text('O', {
+          left: -4,
+          top: -8,
+          fontSize: 14,
+          fill: '#FFF',
+          fontWeight: 'bold'
+        });
+        objects.push(oLabel);
+
+        const h1Label = new fabric.Text('H', {
+          left: 17,
+          top: -16,
+          fontSize: 10,
+          fill: '#333',
+          fontWeight: 'bold'
+        });
+        objects.push(h1Label);
+
+        const h2Label = new fabric.Text('H', {
+          left: 17,
+          top: 8,
+          fontSize: 10,
+          fill: '#333',
+          fontWeight: 'bold'
+        });
+        objects.push(h2Label);
+      }
+
+      const group = new fabric.Group(objects, {
+        left: shape.left || 100,
+        top: shape.top || 100
+      });
+      canvas.add(group);
+      return group;
+    }
+
+    // PRECISION MATHEMATICAL GRAPH ENGINE
+    function drawGraph(shape) {
+      const objects = [];
+      const width = shape.width || 400;
+      const height = shape.height || 300;
+      const padding = 40;
+      const gridSize = 20;
+
+      // Background with subtle gradient
+      const background = new fabric.Rect({
+        left: 0,
+        top: 0,
+        width: width,
+        height: height,
+        fill: DrawingUtils.createGradient('linear', ['#FAFAFA', '#F5F5F5']),
+        stroke: '#E0E0E0',
+        strokeWidth: 1,
+        rx: 8,
+        ry: 8
+      });
+      objects.push(background);
+
+      // Coordinate system center
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      // Major grid lines
+      for (let i = -10; i <= 10; i++) {
+        const x = centerX + (i * gridSize);
+        const y = centerY + (i * gridSize);
+        
+        if (x >= 0 && x <= width) {
+          const vGrid = new fabric.Line([x, 0, x, height], {
+            stroke: i === 0 ? '#333' : '#E8E8E8',
+            strokeWidth: i === 0 ? 2 : 1,
+            opacity: i === 0 ? 1 : 0.6
+          });
+          objects.push(vGrid);
+          
+          // X-axis labels
+          if (i !== 0 && Math.abs(i) <= 8) {
+            const label = new fabric.Text(i.toString(), {
+              left: x,
+              top: centerY + 5,
+              fontSize: 10,
+              fill: '#666',
+              originX: 'center',
+              fontFamily: 'Arial, sans-serif'
+            });
+            objects.push(label);
+          }
+        }
+        
+        if (y >= 0 && y <= height) {
+          const hGrid = new fabric.Line([0, y, width, y], {
+            stroke: i === 0 ? '#333' : '#E8E8E8',
+            strokeWidth: i === 0 ? 2 : 1,
+            opacity: i === 0 ? 1 : 0.6
+          });
+          objects.push(hGrid);
+          
+          // Y-axis labels
+          if (i !== 0 && Math.abs(i) <= 6) {
+            const label = new fabric.Text((-i).toString(), {
+              left: centerX - 15,
+              top: y,
+              fontSize: 10,
+              fill: '#666',
+              originY: 'center',
+              fontFamily: 'Arial, sans-serif'
+            });
+            objects.push(label);
+          }
+        }
+      }
+
+      // Axis arrows
+      const xArrow = new fabric.Polygon([
+        {x: width - 10, y: centerY},
+        {x: width - 20, y: centerY - 5},
+        {x: width - 20, y: centerY + 5}
+      ], {
+        fill: '#333'
+      });
+      objects.push(xArrow);
+
+      const yArrow = new fabric.Polygon([
+        {x: centerX, y: 10},
+        {x: centerX - 5, y: 20},
+        {x: centerX + 5, y: 20}
+      ], {
+        fill: '#333'
+      });
+      objects.push(yArrow);
+
+      // Axis labels
+      const xLabel = new fabric.Text('x', {
+        left: width - 25,
+        top: centerY + 15,
+        fontSize: 14,
+        fill: '#333',
+        fontStyle: 'italic',
+        fontFamily: 'Times New Roman, serif'
+      });
+      objects.push(xLabel);
+
+      const yLabel = new fabric.Text('y', {
+        left: centerX + 10,
+        top: 15,
+        fontSize: 14,
+        fill: '#333',
+        fontStyle: 'italic',
+        fontFamily: 'Times New Roman, serif'
+      });
+      objects.push(yLabel);
+
+      // Function curves with precise mathematics
+      const functions = shape.functions || [
+        {equation: 'x^2', color: '#2196F3', strokeWidth: 3}
+      ];
+
+      functions.forEach(func => {
+        let pathString = '';
+        let firstPoint = true;
+        
+        for (let px = 0; px <= width; px += 2) {
+          const x = (px - centerX) / gridSize; // Convert to mathematical coordinates
+          let y;
+          
+          // Simple function evaluator (could be enhanced with math.js)
+          if (func.equation === 'x^2') {
+            y = x * x;
+          } else if (func.equation === 'sin(x)') {
+            y = Math.sin(x);
+          } else if (func.equation === 'cos(x)') {
+            y = Math.cos(x);
+          } else if (func.equation === 'x^3') {
+            y = x * x * x;
+          } else if (func.equation === 'sqrt(x)') {
+            y = x >= 0 ? Math.sqrt(x) : NaN;
+          } else {
+            y = 0; // Default
+          }
+          
+          if (!isNaN(y) && isFinite(y)) {
+            const py = centerY - (y * gridSize); // Convert back to canvas coordinates
+            if (py >= -10 && py <= height + 10) { // Allow slight overflow
+              if (firstPoint) {
+                pathString = `M ${px} ${py}`;
+                firstPoint = false;
+              } else {
+                pathString += ` L ${px} ${py}`;
+              }
+            }
+          }
+        }
+
+        if (pathString) {
+          const curve = new fabric.Path(pathString, {
+            stroke: func.color || '#2196F3',
+            strokeWidth: func.strokeWidth || 3,
+            fill: '',
+            strokeLineCap: 'round',
+            shadow: DrawingUtils.createShadow({blur: 2, offsetX: 1, offsetY: 1, color: 'rgba(0,0,0,0.2)'})
+          });
+          objects.push(curve);
+
+          // Function label
+          const funcLabel = new fabric.Text(`y = ${func.equation}`, {
+            left: width - 120,
+            top: 30 + (functions.indexOf(func) * 25),
+            fontSize: 14,
+            fill: func.color || '#2196F3',
+            fontWeight: 'bold',
+            fontFamily: 'Times New Roman, serif',
+            backgroundColor: 'rgba(255,255,255,0.9)',
+            padding: 4
+          });
+          objects.push(funcLabel);
+        }
+      });
+
+      // Title with professional styling
+      if (shape.title) {
+        const title = new fabric.Text(shape.title, {
+          left: centerX,
+          top: 15,
+          fontSize: 18,
+          fill: '#333',
+          fontWeight: 'bold',
+          fontFamily: 'Arial, sans-serif',
+          originX: 'center',
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          padding: 8
+        });
+        objects.push(title);
+      }
+
+      const group = new fabric.Group(objects, {
+        left: shape.left || 50,
+        top: shape.top || 50
+      });
+      canvas.add(group);
+      return group;
+    }
+
+    // Zoom and pan functionality
+    let zoomLevel = 1;
+    
+    function zoomIn() {
+      zoomLevel = Math.min(zoomLevel * 1.2, 3);
+      canvas.setZoom(zoomLevel);
+      canvas.renderAll();
+    }
+
+    function zoomOut() {
+      zoomLevel = Math.max(zoomLevel / 1.2, 0.3);
+      canvas.setZoom(zoomLevel);
+      canvas.renderAll();
+    }
+
+    function resetZoom() {
+      zoomLevel = 1;
+      canvas.setZoom(1);
+      canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+      canvas.renderAll();
+    }
+
+    // Mouse wheel zoom
+    canvas.on('mouse:wheel', function(opt) {
+      var delta = opt.e.deltaY;
+      var zoom = canvas.getZoom();
+      zoom *= 0.999 ** delta;
+      if (zoom > 3) zoom = 3;
+      if (zoom < 0.3) zoom = 0.3;
+      canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+      zoomLevel = zoom;
+      opt.e.preventDefault();
+      opt.e.stopPropagation();
+    });
+
+    // Pan functionality
+    let isDragging = false;
+    let lastPosX, lastPosY;
+
+    canvas.on('mouse:down', function(opt) {
+      if (opt.e.spaceKey) {
+        isDragging = true;
+        canvas.selection = false;
+        lastPosX = opt.e.clientX;
+        lastPosY = opt.e.clientY;
+      }
+    });
+
+    canvas.on('mouse:move', function(opt) {
+      if (isDragging) {
+        let vpt = canvas.viewportTransform;
+        vpt[4] += opt.e.clientX - lastPosX;
+        vpt[5] += opt.e.clientY - lastPosY;
+        canvas.requestRenderAll();
+        lastPosX = opt.e.clientX;
+        lastPosY = opt.e.clientY;
+      }
+    });
+
+    canvas.on('mouse:up', function(opt) {
+      isDragging = false;
+      canvas.selection = true;
+    });
+
+    // Enhanced LLM integration
+    async function sendToLLM() {
+      const statusEl = document.getElementById('status');
+      const spinner = document.querySelector('.loading-spinner');
+      const instruction = document.getElementById('instruction').value;
+
+      if (!instruction.trim()) {
+        setStatus('Please enter an instruction first.', 'error');
+        return;
+      }
+
+      setStatus('Generating your drawing...', 'loading');
+      spinner.style.display = 'inline-block';
+      canvas.clear();
+
+      try {
+        const res = await fetch('http://localhost:8001/groq', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ instruction: instruction })
+        });
+
+        const data = await res.json();
+        let jsonStr = data.choices && data.choices[0]?.message?.content?.trim();
+        
+        if (!jsonStr) throw new Error("No LLM output found");
+
+        // Clean up LLM output
+        jsonStr = jsonStr.replace(/^```json|```$/g, '').trim();
+        
+        let parsed;
+        try {
+          parsed = JSON.parse(jsonStr);
+        } catch (e) {
+          setStatus('Error: Invalid JSON from LLM', 'error');
+          return;
+        }
+
+        if (!parsed.shapes || !Array.isArray(parsed.shapes)) {
+          setStatus('Error: No shapes found in response', 'error');
+          return;
+        }
+
+        // Draw all shapes
+        parsed.shapes.forEach(shape => {
+          try {
+            drawShape(shape);
+          } catch (err) {
+            console.warn('Failed to draw shape:', shape, err);
+          }
+        });
+
+        canvas.renderAll();
+        setStatus(`Successfully drew ${parsed.shapes.length} elements!`, 'success');
+
+      } catch (err) {
+        setStatus('Error: ' + err.message, 'error');
+        console.error(err);
+      } finally {
+        spinner.style.display = 'none';
+      }
+    }
+
+    // Utility functions
+    function setStatus(message, type) {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.className = `status ${type}`;
+    }
+
+    function setInstruction(text) {
+      document.getElementById('instruction').value = text;
+    }
+
+    function clearCanvas() {
+      canvas.clear();
+      canvas.backgroundColor = '#ffffff';
+      canvas.renderAll();
+      setStatus('Canvas cleared. Ready for new drawing!', 'success');
+    }
+
+    function exportCanvas() {
+      const link = document.createElement('a');
+      link.download = 'whiteboard-drawing.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      setStatus('Drawing exported successfully!', 'success');
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        const mathSolver = document.getElementById('mathSolver');
+        if (mathSolver.classList.contains('active')) {
+          solveMathSteps();
+        } else {
+          sendToLLM();
+        }
+      } else if (e.ctrlKey && e.key === 'z') {
+        e.preventDefault();
+        // Undo functionality would go here
+      } else if (e.key === 'Delete') {
+        const activeObjects = canvas.getActiveObjects();
+        if (activeObjects.length) {
+          activeObjects.forEach(obj => canvas.remove(obj));
+          canvas.discardActiveObject();
+          canvas.renderAll();
+        }
+      } else if (e.key === 'ArrowLeft' && mathSteps.length > 0) {
+        e.preventDefault();
+        previousStep();
+      } else if (e.key === 'ArrowRight' && mathSteps.length > 0) {
+        e.preventDefault();
+        nextStep();
+      }
+    });
+
+    // Math input Enter key support
+    document.getElementById('mathInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        solveMathSteps();
+      }
+    });
+
+    // Math Solver Variables
+    let mathSteps = [];
+    let currentStepIndex = 0;
+    let showTeachingComments = true;
+
+    // Math Solver Functions
+    function toggleMathSolver() {
+      const mathSolver = document.getElementById('mathSolver');
+      const isActive = mathSolver.classList.contains('active');
+      
+      if (isActive) {
+        mathSolver.classList.remove('active');
+        setStatus('Diagram mode activated', 'success');
+      } else {
+        mathSolver.classList.add('active');
+        setStatus('Math solver activated - enter an equation to solve step by step!', 'success');
+      }
+    }
+
+    function toggleTeachingComments() {
+      const toggle = document.getElementById('teachingToggle');
+      showTeachingComments = !showTeachingComments;
+      
+      if (showTeachingComments) {
+        toggle.classList.add('active');
+      } else {
+        toggle.classList.remove('active');
+      }
+      
+      // Refresh the display if steps are shown
+      if (mathSteps.length > 0) {
+        displayMathSteps();
+      }
+    }
+
+    async function solveMathSteps() {
+      const mathInput = document.getElementById('mathInput');
+      const equation = mathInput.value.trim();
+      
+      if (!equation) {
+        setStatus('Please enter an equation to solve', 'error');
+        return;
+      }
+      
+      setStatus('Solving equation step by step...', 'loading');
+      
+      try {
+        const response = await fetch('http://localhost:8001/math_steps', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ equation: equation })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+          setStatus('Error: ' + data.error, 'error');
+          return;
+        }
+        
+        mathSteps = data.steps;
+        currentStepIndex = 0;
+        
+        displayMathSteps();
+        displayStepOnCanvas();
+        
+        setStatus(`Solved! Found ${mathSteps.length} steps`, 'success');
+        
+      } catch (error) {
+        setStatus('Error solving equation: ' + error.message, 'error');
+      }
+    }
+
+    function displayMathSteps() {
+      const stepsContainer = document.getElementById('mathSteps');
+      const navigation = document.getElementById('stepNavigation');
+      
+      if (mathSteps.length === 0) {
+        stepsContainer.innerHTML = '<p>No steps to display</p>';
+        navigation.style.display = 'none';
+        return;
+      }
+      
+      // Show navigation if multiple steps
+      if (mathSteps.length > 1) {
+        navigation.style.display = 'flex';
+        updateStepNavigation();
+      } else {
+        navigation.style.display = 'none';
+      }
+      
+      // Display all steps or just current step
+      let html = '';
+      mathSteps.forEach((step, index) => {
+        const isCurrent = index === currentStepIndex;
+        html += `
+          <div class="math-step ${isCurrent ? 'current' : ''}" data-step="${index}">
+            <div class="math-latex">${step.latex}</div>
+            <div class="math-explanation">${step.explanation}</div>
+            ${showTeachingComments && step.teaching_comment ? 
+              `<div class="teaching-comment">${step.teaching_comment}</div>` : ''}
+          </div>
+        `;
+      });
+      
+      stepsContainer.innerHTML = html;
+    }
+
+    function displayStepOnCanvas() {
+      if (mathSteps.length === 0) return;
+      
+      canvas.clear();
+      canvas.backgroundColor = '#ffffff';
+      
+      const step = mathSteps[currentStepIndex];
+      
+      // Create a text object for the LaTeX (MathJax will render it)
+      const mathText = new fabric.Text(step.latex, {
+        left: 400,
+        top: 200,
+        fontSize: 24,
+        fill: '#333',
+        fontFamily: 'Times New Roman, serif',
+        originX: 'center',
+        originY: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        padding: 20
+      });
+      
+      canvas.add(mathText);
+      
+      // Add explanation below
+      const explanationText = new fabric.Text(step.explanation, {
+        left: 400,
+        top: 280,
+        fontSize: 16,
+        fill: '#666',
+        fontFamily: 'Arial, sans-serif',
+        originX: 'center',
+        originY: 'center',
+        backgroundColor: 'rgba(248, 249, 250, 0.9)',
+        padding: 15
+      });
+      
+      canvas.add(explanationText);
+      
+      // Add teaching comment if enabled
+      if (showTeachingComments && step.teaching_comment) {
+        const teachingText = new fabric.Text(step.teaching_comment, {
+          left: 400,
+          top: 350,
+          fontSize: 14,
+          fill: '#6c757d',
+          fontFamily: 'Arial, sans-serif',
+          fontStyle: 'italic',
+          originX: 'center',
+          originY: 'center',
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          padding: 12
+        });
+        
+        canvas.add(teachingText);
+      }
+      
+      canvas.renderAll();
+      
+      // Trigger MathJax rendering
+      if (window.MathJax) {
+        MathJax.typesetPromise([canvas.getElement()]).catch(function(err) {
+          console.log('MathJax error:', err);
+        });
+      }
+    }
+
+    function updateStepNavigation() {
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const counter = document.getElementById('stepCounter');
+      
+      prevBtn.disabled = currentStepIndex === 0;
+      nextBtn.disabled = currentStepIndex === mathSteps.length - 1;
+      counter.textContent = `Step ${currentStepIndex + 1} of ${mathSteps.length}`;
+    }
+
+    function previousStep() {
+      if (currentStepIndex > 0) {
+        currentStepIndex--;
+        displayMathSteps();
+        displayStepOnCanvas();
+      }
+    }
+
+    function nextStep() {
+      if (currentStepIndex < mathSteps.length - 1) {
+        currentStepIndex++;
+        displayMathSteps();
+        displayStepOnCanvas();
+      }
+    }
+
+    // Initialize
+    canvas.renderAll();
+    setStatus('Ready to create amazing educational diagrams!', 'success');
+  </script>
+</body>
+</html>

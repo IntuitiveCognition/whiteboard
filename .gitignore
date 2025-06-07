@@ -1,0 +1,70 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+*.pyd
+*.pyo
+*.pdb
+*.log
+
+# === Virtual Environments ===
+env/
+venv/
+.venv/
+ENV/
+.env/
+.virtualenv/
+
+# === IDEs and Editors ===
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# === OS files ===
+.DS_Store
+Thumbs.db
+
+# === Jupyter Notebook Checkpoints ===
+.ipynb_checkpoints/
+
+# === dotenv ===
+.env
+.env.*
+
+# === Bytecode Cache ===
+__pycache__/
+
+# === Build Artifacts ===
+build/
+dist/
+*.spec
+
+# === Node / Frontend (if applicable) ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === Test Reports ===
+htmlcov/
+coverage/
+*.cover
+*.py,cover
+.cache
+nosetests.xml
+coverage.xml
+*.lcov
+
+# === MyPy / Pyright ===
+.mypy_cache/
+.pyright/
+.dmypy.json
+
+# === Misc ===
+*.sqlite3
+*.bak
+*.tmp
+*.swp
