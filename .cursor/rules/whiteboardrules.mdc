@@ -1,0 +1,87 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+project: Axondra Whiteboard AI Drawer
+
+purpose: >
+Create an intelligent agent that generates and draws accurate, labeled scientific and mathematical diagrams on a Fabric.js whiteboard.
+The agent must interpret high-level user prompts (e.g., "draw a detailed mitochondria with labels"), then plan and render the diagram using structured canvas commands.
+The system will evolve toward an AI that can teach and visually explain STEM concepts in real-time.
+
+tools:
+
+fabric.js (Canvas rendering)
+
+sympy==1.12 (Math expression rendering and evaluation)
+
+fastapi==0.104.1 (Backend API)
+
+uvicorn[standard]==0.24.0 (ASGI server for FastAPI)
+
+python-dotenv==1.0.0 (Environment variable management)
+
+httpx==0.25.2 (Async HTTP client)
+
+pydantic==2.5.0 (Data validation and settings management)
+
+JSON (Intermediate representation for diagram structure)
+
+rules:
+
+The agent does NOT directly draw pixel-by-pixel. It generates structured JSON instructions that are interpreted by a drawing engine.
+
+All output from the agent must be machine-parseable. No freeform explanations, sketches, or SVG blobs.
+
+Each diagram is represented as a structured list of objects:
+
+shapes: [rectangle, ellipse, path, arrow, polygon]
+
+labels: with fixed (x,y) coordinates
+
+arrows: with from and to coordinate anchors or object references
+
+The agent must attempt spatial separation between labels, avoiding visual clutter or overlapping elements.
+
+When generating arrows, always define both origin and target points explicitly, or refer to labeled object IDs.
+
+If using SymPy, math expressions should be rendered to LaTeX or MathML for separate rendering logic, not drawn manually.
+
+Each object in the plan must contain:
+
+type: ("shape", "label", "arrow", etc.)
+
+coordinates: (x, y, width, height, etc.)
+
+optional: "label", "id", "style", "target", etc.
+
+Agent must default to a left-to-right or top-down layout unless otherwise specified by the prompt.
+
+Diagrams must be educational and accurate. Scientific components (e.g., mitochondria, circuits, vectors) must be correctly labeled and oriented.
+
+Agent is allowed to use prebuilt templates or internal knowledge to scaffold common diagrams (e.g., neuron, atom, heart, circuit).
+
+The whiteboard must always remain editable post-render. All elements must be draggable and modifiable by the user.
+
+Rendering logic must include z-index layering: shapes at bottom, labels above, arrows on top.
+
+Any failure to generate a valid diagram plan should fallback to a text explanation of why the plan failed.
+
+edge_cases:
+
+If there are too many labels or elements to fit cleanly, prioritize clarity over completeness.
+
+Arrows must never cross through unrelated labels if avoidable.
+
+Math expressions must not be rendered as labels unless explicitly marked.
+
+intent:
+
+Enable AI-assisted teaching by generating accurate and engaging diagrams in real-time.
+
+Bridge the gap between textual explanation and spatial learning using intelligent visual synthesis.
+
+Create reusable diagram plans that can evolve with feedback and corrections.
+
+
